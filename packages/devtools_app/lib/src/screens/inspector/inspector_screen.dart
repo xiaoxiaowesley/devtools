@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -399,6 +400,14 @@ class InspectorSummaryTreeControls extends StatelessWidget {
   final VoidCallback onSearchVisibleToggle;
   final Widget Function() searchFieldBuilder;
 
+  void _onStartRecord(){
+
+  }
+
+  void _onStopRecord(){
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -411,6 +420,8 @@ class InspectorSummaryTreeControls extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: denseSpacing),
                 child: Text('Widget Tree'),
               ),
+              PipelineRecordButton(
+                onStartRecord: _onStartRecord, onStopRecord: _onStopRecord,),
               ...!isSearchVisible
                   ? [
                       const Spacer(),
@@ -556,5 +567,91 @@ class PubRootDirectorySection extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class PipelineRecordButton extends StatefulWidget {
+  const PipelineRecordButton({
+    Key? key,
+    required this.onStartRecord,
+    required this.onStopRecord,
+  }) : super(key: key);
+
+  final VoidCallback onStartRecord;
+  final VoidCallback onStopRecord;
+
+  @override
+  _PipelineRecordButtonState createState() => _PipelineRecordButtonState();
+}
+
+class _PipelineRecordButtonState extends State<PipelineRecordButton>
+    with TickerProviderStateMixin {
+  bool _isLoading = false;
+  final int timerMaxMilliseconds = 60 * 1000;
+
+  late Timer _timer;
+
+  int currentMilliseconds = 0;
+
+  String get timerText => currentMilliseconds > timerMaxMilliseconds
+      ? 'time out'
+      : '${(currentMilliseconds ~/ 1000).toString().padLeft(2, '0')}: ${(currentMilliseconds % 1000).toString().padLeft(2, '0')}';
+
+  void startTimeout() {
+    currentMilliseconds = 0;
+    _isLoading = true;
+    _timer = Timer.periodic(const Duration(milliseconds: 1), (timer) {
+      setState(() {
+        currentMilliseconds = timer.tick;
+        if (timer.tick >= timerMaxMilliseconds) {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void stopTimeout() {
+    _isLoading = false;
+    _timer?.cancel();
+  }
+
+  @override
+  void dispose() {
+    if (_timer.isActive) {
+      _timer?.cancel();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Row(
+        children: [
+          ToolbarAction(
+            icon: Icons.stop_circle,
+            onPressed: () {
+              stopTimeout();
+              setState(() {
+                widget.onStopRecord();
+              });
+            },
+            tooltip: 'Stop record',
+          ),
+          Text(timerText)
+        ],
+      );
+    } else {
+      return ToolbarAction(
+        icon: Icons.photo_camera,
+        onPressed: () {
+          startTimeout();
+          setState(() {
+            widget.onStartRecord();
+          });
+        },
+        tooltip: 'Start record',
+      );
+    }
   }
 }
