@@ -65,7 +65,9 @@ void main() {
         InspectorTree(
           treeController: treeController,
           summaryTreeController: summaryTreeController,
-          isSummaryTree: isSummaryTree,
+          inspectorTreeType: isSummaryTree
+              ? InspectorTreeType.widgetSummary
+              : InspectorTreeType.widgetDetail,
         ),
       ),
     );

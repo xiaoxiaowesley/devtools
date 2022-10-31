@@ -30,6 +30,7 @@ import 'inspector_controller.dart';
 import 'inspector_screen_details_tab.dart';
 import 'inspector_tree.dart';
 import 'inspector_tree_controller.dart';
+import 'primitives/inspector_common.dart';
 
 class InspectorScreen extends Screen {
   const InspectorScreen()
@@ -161,6 +162,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
 
     final detailsTree = InspectorTree(
       key: detailsTreeKey,
+      inspectorTreeType: InspectorTreeType.widgetDetail,
       treeController: _detailsTreeController,
       summaryTreeController: _summaryTreeController,
     );
@@ -168,7 +170,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
     final layerTree = InspectorTree(
       key: layerTreeKey,
       treeController: _layerTreeController,
-      isLayerTree: true,
+      inspectorTreeType: InspectorTreeType.layer,
     );
 
     final splitAxis = Split.axisFor(context, 0.85);
@@ -257,7 +259,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
                         InspectorTree(
                           key: summaryTreeKey,
                           treeController: _summaryTreeController,
-                          isSummaryTree: true,
+                          inspectorTreeType: InspectorTreeType.widgetSummary,
                           widgetErrors: inspectableErrors,
                         ),
                         if (errors.isNotEmpty)

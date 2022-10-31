@@ -13,27 +13,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../devtools_app.dart';
 import '../../analytics/analytics.dart' as ga;
 import '../../analytics/constants.dart' as analytics_constants;
 import '../../config_specific/logger/logger.dart';
-import '../../primitives/auto_dispose_mixin.dart';
-import '../../primitives/utils.dart';
 import '../../shared/collapsible_mixin.dart';
-import '../../shared/common_widgets.dart';
-import '../../shared/error_badge_manager.dart';
-import '../../shared/globals.dart';
-import '../../shared/theme.dart';
-import '../../shared/utils.dart';
 import '../../ui/colors.dart';
-import '../../ui/search.dart';
 import '../../ui/utils.dart';
-import '../debugger/debugger_controller.dart';
-import 'diagnostics.dart';
-import 'diagnostics_node.dart';
 import 'inspector_breadcrumbs.dart';
-import 'inspector_controller.dart';
-import 'inspector_screen.dart';
-import 'inspector_tree.dart';
 import 'primitives/inspector_text_styles.dart' as inspector_text_styles;
 
 /// Presents a [TreeNode].
@@ -723,9 +710,8 @@ class InspectorTree extends StatefulWidget {
   const InspectorTree({
     Key? key,
     required this.treeController,
+    required this.inspectorTreeType,
     this.summaryTreeController,
-    this.isSummaryTree = false,
-    this.isLayerTree = false,
     this.widgetErrors,
   }) : super(key: key);
 
@@ -738,8 +724,15 @@ class InspectorTree extends StatefulWidget {
   /// summary tree itself.
   final InspectorTreeController? summaryTreeController;
 
-  final bool isSummaryTree;
-  final bool isLayerTree;
+  final InspectorTreeType inspectorTreeType;
+
+  bool get isSummaryTree =>
+      inspectorTreeType == InspectorTreeType.widgetSummary;
+
+  bool get isDetailTree => inspectorTreeType == InspectorTreeType.widgetDetail;
+
+  bool get isLayerTree => inspectorTreeType == InspectorTreeType.layer;
+
   final LinkedHashMap<String, InspectableWidgetError>? widgetErrors;
 
   @override
@@ -1062,7 +1055,8 @@ class _InspectorTreeState extends State<InspectorTree>
           ),
         );
 
-        final bool shouldShowBreadcrumbs = !widget.isSummaryTree && !widget.isLayerTree;
+        final bool shouldShowBreadcrumbs =
+            !widget.isSummaryTree && !widget.isLayerTree;
         if (shouldShowBreadcrumbs) {
           final inspectorTreeController = widget.summaryTreeController!;
 

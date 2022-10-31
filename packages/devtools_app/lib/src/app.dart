@@ -574,6 +574,7 @@ List<DevToolsScreen> get defaultScreens {
         detailsTree: InspectorTreeController(),
         layerTree: InspectorTreeController(),
         treeType: FlutterTreeType.widget,
+        inspectorTreeType: InspectorTreeType.widgetSummary,
       ),
     ),
     DevToolsScreen<PerformanceController>(

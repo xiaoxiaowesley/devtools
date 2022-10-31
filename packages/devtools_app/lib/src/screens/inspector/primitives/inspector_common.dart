@@ -8,3 +8,9 @@ enum FlutterTreeType {
   layer, //('Layer')
 // TODO(jacobr): add semantics.
 }
+
+enum InspectorTreeType {
+  widgetSummary, // summary widget tree
+  widgetDetail, // detail widget tree
+  layer, // layer tree
+}

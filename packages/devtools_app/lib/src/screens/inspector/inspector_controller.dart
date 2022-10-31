@@ -43,13 +43,14 @@ class InspectorController extends DisposableController
     implements InspectorServiceClient {
   InspectorController({
     required this.inspectorTree,
+    required this.inspectorTreeType,
     InspectorTreeController? detailsTree,
     InspectorTreeController? layerTree,
     required this.treeType,
     this.parent,
-    this.isSummaryTree = true,
-  })  {
-    //TODO:assert((detailsTree != null) == isSummaryTree);
+  }) {
+    assert(((detailsTree != null) == isSummaryTree) ||
+        (layerTree != null) == isLayerTree);
     _init(detailsTree: detailsTree, layerTree: layerTree);
   }
 
@@ -71,9 +72,9 @@ class InspectorController extends DisposableController
     if (isSummaryTree) {
       details = InspectorController(
         inspectorTree: detailsTree!,
+        inspectorTreeType: InspectorTreeType.widgetDetail,
         treeType: treeType,
         parent: this,
-        isSummaryTree: false,
       );
     } else {
       details = null;
@@ -82,6 +83,7 @@ class InspectorController extends DisposableController
     if (layerTree != null) {
       layer = InspectorController(
         treeType: FlutterTreeType.layer,
+        inspectorTreeType: InspectorTreeType.layer,
         parent: this,
         inspectorTree: layerTree!,
       );
@@ -137,6 +139,13 @@ class InspectorController extends DisposableController
     serviceManager.consoleService.ensureServiceInitialized();
   }
 
+  bool get isSummaryTree =>
+      inspectorTreeType == InspectorTreeType.widgetSummary;
+
+  bool get isDetailTree => inspectorTreeType == InspectorTreeType.widgetDetail;
+
+  bool get isLayerTree => inspectorTreeType == InspectorTreeType.layer;
+
   void _handleConnectionStart(VmService service) {
     // Clear any existing badge/errors for older errors that were collected.
     // Do this in a post frame callback so that we are not trying to clear the
@@ -190,8 +199,6 @@ class InspectorController extends DisposableController
   /// for now mainly to minimize risk.
   static const double refreshFramesPerSecond = 5.0;
 
-  final bool isSummaryTree;
-
   /// Parent InspectorController if this is a details subtree.
   InspectorController? parent;
 
@@ -201,6 +208,7 @@ class InspectorController extends DisposableController
 
   InspectorTreeController inspectorTree;
   final FlutterTreeType treeType;
+  final InspectorTreeType inspectorTreeType;
 
   bool _disposed = false;
 
