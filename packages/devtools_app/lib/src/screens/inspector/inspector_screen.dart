@@ -243,15 +243,12 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
                     ) as LinkedHashMap<String, InspectableWidgetError>;
                     return Stack(
                       children: [
-                        Container(color:Colors.lightBlue,
-                            child:InspectorTree(
-                              key: summaryTreeKey,
-                              treeController: _summaryTreeController,
-                              isSummaryTree: true,
-                              widgetErrors: inspectableErrors,
-                            )
+                        InspectorTree(
+                          key: summaryTreeKey,
+                          treeController: _summaryTreeController,
+                          isSummaryTree: true,
+                          widgetErrors: inspectableErrors,
                         ),
-
                         if (errors.isNotEmpty)
                           ValueListenableBuilder<int?>(
                             valueListenable: controller.selectedErrorIndex,
