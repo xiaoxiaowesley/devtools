@@ -725,9 +725,9 @@ class InspectorTree extends StatefulWidget {
     required this.treeController,
     this.summaryTreeController,
     this.isSummaryTree = false,
+    this.isLayerTree = false,
     this.widgetErrors,
-  })  : assert(isSummaryTree == (summaryTreeController == null)),
-        super(key: key);
+  }) : super(key: key);
 
   final InspectorTreeController? treeController;
 
@@ -739,6 +739,7 @@ class InspectorTree extends StatefulWidget {
   final InspectorTreeController? summaryTreeController;
 
   final bool isSummaryTree;
+  final bool isLayerTree;
   final LinkedHashMap<String, InspectableWidgetError>? widgetErrors;
 
   @override
@@ -1061,7 +1062,7 @@ class _InspectorTreeState extends State<InspectorTree>
           ),
         );
 
-        final bool shouldShowBreadcrumbs = !widget.isSummaryTree;
+        final bool shouldShowBreadcrumbs = !widget.isSummaryTree && !widget.isLayerTree;
         if (shouldShowBreadcrumbs) {
           final inspectorTreeController = widget.summaryTreeController!;
 

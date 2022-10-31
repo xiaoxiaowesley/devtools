@@ -44,15 +44,18 @@ class InspectorController extends DisposableController
   InspectorController({
     required this.inspectorTree,
     InspectorTreeController? detailsTree,
+    InspectorTreeController? layerTree,
     required this.treeType,
     this.parent,
     this.isSummaryTree = true,
-  }) : assert((detailsTree != null) == isSummaryTree) {
-    _init(detailsTree: detailsTree);
+  })  {
+    //TODO:assert((detailsTree != null) == isSummaryTree);
+    _init(detailsTree: detailsTree, layerTree: layerTree);
   }
 
   Future<void> _init({
     InspectorTreeController? detailsTree,
+    InspectorTreeController? layerTree,
   }) async {
     _refreshRateLimiter = RateLimiter(refreshFramesPerSecond, refresh);
 
@@ -74,6 +77,16 @@ class InspectorController extends DisposableController
       );
     } else {
       details = null;
+    }
+
+    if (layerTree != null) {
+      layer = InspectorController(
+        treeType: FlutterTreeType.layer,
+        parent: this,
+        inspectorTree: layerTree!,
+      );
+    } else {
+      layer = null;
     }
 
     await serviceManager.onServiceAvailable;
@@ -183,6 +196,8 @@ class InspectorController extends DisposableController
   InspectorController? parent;
 
   InspectorController? details;
+
+  InspectorController? layer;
 
   InspectorTreeController inspectorTree;
   final FlutterTreeType treeType;
@@ -959,7 +974,18 @@ class InspectorController extends DisposableController
     if (node == null || group.disposed || _disposed) {
       return;
     } else {
-      print('${node.toString()}');
+      final layer = this.layer;
+      if (layer != null) {
+        final layerInspectorTree = layer.inspectorTree;
+        final InspectorTreeNode rootNode =
+            layerInspectorTree.setupInspectorTreeNode(
+          layerInspectorTree.createNode(),
+          node,
+          expandChildren: true,
+          expandProperties: false,
+        );
+        this.layer?.inspectorTree!.root = rootNode;
+      }
     }
   }
 

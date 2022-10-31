@@ -572,6 +572,7 @@ List<DevToolsScreen> get defaultScreens {
       createController: () => InspectorController(
         inspectorTree: InspectorTreeController(),
         detailsTree: InspectorTreeController(),
+        layerTree: InspectorTreeController(),
         treeType: FlutterTreeType.widget,
       ),
     ),

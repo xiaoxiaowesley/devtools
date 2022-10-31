@@ -17,11 +17,13 @@ import 'layout_explorer/layout_explorer.dart';
 class InspectorDetails extends StatelessWidget {
   const InspectorDetails({
     required this.detailsTree,
+    required this.layerTree,
     required this.controller,
     Key? key,
   }) : super(key: key);
 
   final Widget detailsTree;
+  final Widget layerTree;
   final InspectorController controller;
 
   @override
@@ -32,10 +34,12 @@ class InspectorDetails extends StatelessWidget {
         tabName: 'Widget Details Tree',
         trailing: InspectorExpandCollapseButtons(controller: controller),
       ),
+      _buildTab(tabName: 'Layer Tree'),
     ];
     final tabViews = <Widget>[
       LayoutExplorerTab(controller: controller),
       detailsTree,
+      layerTree,
     ];
 
     return AnalyticsTabbedView(

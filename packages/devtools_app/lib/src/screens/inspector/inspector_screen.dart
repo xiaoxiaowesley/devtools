@@ -74,6 +74,9 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
   InspectorTreeController get _detailsTreeController =>
       controller.details!.inspectorTree;
 
+  InspectorTreeController get _layerTreeController =>
+      controller.layer!.inspectorTree;
+
   bool searchVisible = false;
 
   /// Indicates whether search can be closed. The value is set to true when
@@ -85,6 +88,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
 
   static const summaryTreeKey = Key('Summary Tree');
   static const detailsTreeKey = Key('Details Tree');
+  static const layerTreeKey = Key('Layer Tree');
   static const minScreenWidthForTextBeforeScaling = 900.0;
   static const unscaledIncludeRefreshTreeWidth = 1255.0;
   static const serviceExtensionButtonsIncludeTextWidth = 1160.0;
@@ -161,6 +165,12 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
       summaryTreeController: _summaryTreeController,
     );
 
+    final layerTree = InspectorTree(
+      key: layerTreeKey,
+      treeController: _layerTreeController,
+      isLayerTree: true,
+    );
+
     final splitAxis = Split.axisFor(context, 0.85);
     final widgetTrees = Split(
       axis: splitAxis,
@@ -169,6 +179,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
         summaryTree,
         InspectorDetails(
           detailsTree: detailsTree,
+          layerTree: layerTree,
           controller: controller,
         ),
       ],
