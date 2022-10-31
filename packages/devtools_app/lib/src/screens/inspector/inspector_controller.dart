@@ -919,6 +919,8 @@ class InspectorController extends DisposableController
         return 'Widget';
       case FlutterTreeType.renderObject:
         return 'Render Objects';
+      case FlutterTreeType.layer:
+        return 'layer';
     }
   }
 
@@ -948,5 +950,20 @@ class InspectorController extends DisposableController
     final detailsLocal = details!;
     detailsLocal.inspectorTree.collapseToSelected();
     detailsLocal.animateTo(detailsLocal.inspectorTree.selection);
+  }
+
+  Future<void> startRecord() async {
+    final group = treeGroups.next;
+    final node = await group.getRootLayer();
+
+    if (node == null || group.disposed || _disposed) {
+      return;
+    } else {
+      print('${node.toString()}');
+    }
+  }
+
+  Future<void> stopRecord() async {
+    ///
   }
 }

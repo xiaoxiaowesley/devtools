@@ -1195,6 +1195,8 @@ class ObjectGroup extends ObjectGroupBase {
         return getRootWidget();
       case FlutterTreeType.renderObject:
         return getRootRenderObject();
+      case FlutterTreeType.layer:
+        return getRootLayer();
     }
   }
 
@@ -1220,6 +1222,10 @@ class ObjectGroup extends ObjectGroupBase {
   Future<RemoteDiagnosticsNode?> getRootRenderObject() {
     assert(!disposed);
     return invokeServiceMethodReturningNode('getRootRenderObject');
+  }
+
+  Future<RemoteDiagnosticsNode?> getRootLayer(){
+    return invokeServiceMethodReturningNode('getRootLayer');
   }
 
   /* TODO(jacobr): this probably isn't needed.

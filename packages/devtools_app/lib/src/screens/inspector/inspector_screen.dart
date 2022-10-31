@@ -218,6 +218,8 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
                 constraints: constraints,
                 onRefreshInspectorPressed: _refreshInspector,
                 onSearchVisibleToggle: _onSearchVisibleToggle,
+                onStartRecordPressed: _onStartRecord,
+                onStopRecordPressed: _onStopRecord,
                 searchFieldBuilder: () => buildSearchField(
                   controller: _summaryTreeController,
                   searchFieldKey: GlobalKey(
@@ -241,12 +243,15 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
                     ) as LinkedHashMap<String, InspectableWidgetError>;
                     return Stack(
                       children: [
-                        InspectorTree(
-                          key: summaryTreeKey,
-                          treeController: _summaryTreeController,
-                          isSummaryTree: true,
-                          widgetErrors: inspectableErrors,
+                        Container(color:Colors.lightBlue,
+                            child:InspectorTree(
+                              key: summaryTreeKey,
+                              treeController: _summaryTreeController,
+                              isSummaryTree: true,
+                              widgetErrors: inspectableErrors,
+                            )
                         ),
+
                         if (errors.isNotEmpty)
                           ValueListenableBuilder<int?>(
                             valueListenable: controller.selectedErrorIndex,
@@ -330,6 +335,13 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
       await controller.onForceRefresh();
     });
   }
+
+  void _onStartRecord(){
+    controller.startRecord();
+  }
+  void _onStopRecord(){
+    controller.stopRecord();
+  }
 }
 
 class FlutterInspectorSettingsDialog extends StatelessWidget {
@@ -390,6 +402,8 @@ class InspectorSummaryTreeControls extends StatelessWidget {
     required this.onRefreshInspectorPressed,
     required this.onSearchVisibleToggle,
     required this.searchFieldBuilder,
+    required this.onStartRecordPressed,
+    required this.onStopRecordPressed,
   }) : super(key: key);
 
   static const _searchBreakpoint = 375.0;
@@ -398,15 +412,9 @@ class InspectorSummaryTreeControls extends StatelessWidget {
   final BoxConstraints constraints;
   final VoidCallback onRefreshInspectorPressed;
   final VoidCallback onSearchVisibleToggle;
+  final VoidCallback onStartRecordPressed;
+  final VoidCallback onStopRecordPressed;
   final Widget Function() searchFieldBuilder;
-
-  void _onStartRecord(){
-
-  }
-
-  void _onStopRecord(){
-
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +429,7 @@ class InspectorSummaryTreeControls extends StatelessWidget {
                 child: Text('Widget Tree'),
               ),
               PipelineRecordButton(
-                onStartRecord: _onStartRecord, onStopRecord: _onStopRecord,),
+                onStartRecord: onStartRecordPressed, onStopRecord: onStopRecordPressed,),
               ...!isSearchVisible
                   ? [
                       const Spacer(),

@@ -4,6 +4,7 @@
 
 enum FlutterTreeType {
   widget, // ('Widget'),
-  renderObject // ('Render');
-// TODO(jacobr): add semantics, and layer trees.
+  renderObject, // ('Render');
+  layer, //('Layer')
+// TODO(jacobr): add semantics.
 }
