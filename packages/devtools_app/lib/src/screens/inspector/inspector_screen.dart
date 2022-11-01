@@ -101,8 +101,16 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
   @override
   void dispose() {
     controller.inspectorTree.dispose();
-    if (controller.isSummaryTree && controller.details != null) {
-      controller.details!.inspectorTree.dispose();
+    if (controller.isSummaryTree) {
+      if (controller.details != null) {
+        controller.details!.inspectorTree.dispose();
+      }
+      if (controller.layer != null) {
+        controller.layer!.inspectorTree.dispose();
+      }
+      if (controller.renderObject != null) {
+        controller.renderObject!.inspectorTree.dispose();
+      }
     }
     super.dispose();
   }

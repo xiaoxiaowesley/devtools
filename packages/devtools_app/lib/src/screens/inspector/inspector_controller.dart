@@ -75,7 +75,7 @@ class InspectorController extends DisposableController
       onExpand: _onExpand,
       onClientActiveChange: _onClientChange,
     );
-    if (isSummaryTree) {
+    if (detailsTree != null) {
       details = InspectorController(
         inspectorTree: detailsTree!,
         inspectorTreeType: InspectorTreeType.widgetDetail,
@@ -521,6 +521,32 @@ class InspectorController extends DisposableController
     }
   }
 
+  Future<void> _recomputeRenderObjectTreeRoot(
+    RemoteDiagnosticsNode? newSelection,
+    RemoteDiagnosticsNode? renderObjectSelection,
+    bool setSubtreeRoot, {
+    int subtreeDepth = 2,
+  }) async {
+    assert(!_disposed);
+    if (_disposed) {
+      return;
+    }
+    await _getRenderObjectRootAndUpdate();
+  }
+
+  Future<void> _recomputeLayerTreeRoot(
+    RemoteDiagnosticsNode? newSelection,
+    RemoteDiagnosticsNode? renderObjectSelection,
+    bool setSubtreeRoot, {
+    int subtreeDepth = 2,
+  }) async {
+    assert(!_disposed);
+    if (_disposed) {
+      return;
+    }
+    await _getLayerRootAndUpdate();
+  }
+
   void _clearValueToInspectorTreeNodeMapping() {
     valueToInspectorTreeNode.clear();
   }
@@ -703,9 +729,25 @@ class InspectorController extends DisposableController
         ? group.getSelection(selectedDiagnostic, treeType, isSummaryTree: false)
         : null;
 
+    // TODO: (wesleyxiaoxiao) selectedDiagnostic(widget) convert to renderobject
+    final Future<RemoteDiagnosticsNode?>? pendingRenderObjectFuture =
+        isSummaryTree
+            ? group.getSelection(
+                selectedDiagnostic, FlutterTreeType.renderObject,
+                isSummaryTree: false)
+            : null;
+
+    // TODO: (wesleyxiaoxiao) selectedDiagnostic(widget) convert to layer
+    final Future<RemoteDiagnosticsNode?>? pendingLayerFuture = isSummaryTree
+        ? group.getSelection(selectedDiagnostic, FlutterTreeType.layer,
+            isSummaryTree: false)
+        : null;
+
     try {
       final RemoteDiagnosticsNode? newSelection = await pendingSelectionFuture;
       if (_disposed || group.disposed) return;
+
+      // For detail selection
       RemoteDiagnosticsNode? detailsSelection;
 
       if (pendingDetailsFuture != null) {
@@ -720,11 +762,49 @@ class InspectorController extends DisposableController
         selectionGroups.cancelNext();
         return;
       }
+
+      // For renderObject selection
+      RemoteDiagnosticsNode? renderObjectSelection;
+      if (pendingRenderObjectFuture != null) {
+        renderObjectSelection = await pendingRenderObjectFuture;
+        if (_disposed || group.disposed) return;
+      }
+
+      // TODO: (wesleyxiaoxiao) selectedDiagnostic convert to renderobject then compare.
+      // if (!firstFrame &&
+      //     renderObjectSelection?.valueRef ==
+      //         renderObject?.selectedDiagnostic?.valueRef &&
+      //     newSelection?.valueRef == selectedDiagnostic?.valueRef) {
+      //   // No need to change the selection as it didn't actually change.
+      //   selectionGroups.cancelNext();
+      //   return;
+      // }
+
+      // For layer selection
+      RemoteDiagnosticsNode? layerSelection;
+      if (pendingLayerFuture != null) {
+        layerSelection = await pendingLayerFuture;
+        if (_disposed || group.disposed) return;
+      }
+
+      // TODO: (wesleyxiaoxiao) selectedDiagnostic convert to layer then compare.
+      // if (!firstFrame &&
+      //     renderObjectSelection?.valueRef ==
+      //         renderObject?.selectedDiagnostic?.valueRef &&
+      //     newSelection?.valueRef == selectedDiagnostic?.valueRef) {
+      //   // No need to change the selection as it didn't actually change.
+      //   selectionGroups.cancelNext();
+      //   return;
+      // }
+
       selectionGroups.promoteNext();
 
       subtreeRoot = newSelection;
 
-      applyNewSelection(newSelection, detailsSelection, true);
+      await applyLayerSelection(newSelection, layerSelection, true);
+      await applyRenderObjectSelection(
+          newSelection, renderObjectSelection, true);
+      await applyNewSelection(newSelection, detailsSelection, true);
     } catch (error) {
       if (selectionGroups.next == group) {
         log(error.toString(), LogLevel.error);
@@ -733,21 +813,48 @@ class InspectorController extends DisposableController
     }
   }
 
-  void applyNewSelection(
+  Future<void> applyNewSelection(
     RemoteDiagnosticsNode? newSelection,
     RemoteDiagnosticsNode? detailsSelection,
     bool setSubtreeRoot,
-  ) {
+  ) async {
     final InspectorTreeNode? nodeInTree =
         findMatchingInspectorTreeNode(newSelection);
 
     if (nodeInTree == null) {
       // The tree has probably changed since we last updated. Do a full refresh
       // so that the tree includes the new node we care about.
-      _recomputeTreeRoot(newSelection, detailsSelection, setSubtreeRoot);
+      await _recomputeTreeRoot(newSelection, detailsSelection, setSubtreeRoot);
     }
 
     refreshSelection(newSelection, detailsSelection, setSubtreeRoot);
+  }
+
+  Future<void> applyRenderObjectSelection(RemoteDiagnosticsNode? newSelection,
+      RemoteDiagnosticsNode? renderObjectSelection, bool setSubtreeRoot) async {
+    // final InspectorTreeNode? nodeInTree =
+    // findMatchingInspectorTreeNode(newSelection);
+
+    // if (nodeInTree == null) {
+    await _recomputeRenderObjectTreeRoot(
+        newSelection, renderObjectSelection, setSubtreeRoot);
+    // }
+
+    // TODO: refresh the render object selection
+    // refreshSelection(newSelection, renderObjectSelection, setSubtreeRoot);
+  }
+
+  Future<void> applyLayerSelection(RemoteDiagnosticsNode? newSelection,
+      RemoteDiagnosticsNode? layerSelection, bool setSubtreeRoot) async {
+    // final InspectorTreeNode? nodeInTree =
+    // findMatchingInspectorTreeNode(newSelection);
+    //
+    // if (nodeInTree == null) {
+    await _recomputeLayerTreeRoot(newSelection, layerSelection, setSubtreeRoot);
+    // }
+
+    // TODO: refresh the render object selection
+    // refreshSelection(newSelection, renderObjectSelection, setSubtreeRoot);
   }
 
   void animateTo(InspectorTreeNode? node) {
@@ -998,51 +1105,63 @@ class InspectorController extends DisposableController
   }
 
   Future<void> startRecord() async {
-    _getLayerRootAndUpdate();
-    _getRenderObjectRootAndUpdate();
+    await _getLayerRootAndUpdate();
+    await _getRenderObjectRootAndUpdate();
   }
 
-  void _getLayerRootAndUpdate() async {
-    final group = treeGroups.next;
-    final node = await group.getRootLayer();
+  Future<void> _getLayerRootAndUpdate() async {
+    try {
+      final group = treeGroups.next;
+      final node = await group.getRootLayer();
 
-    if (node == null || group.disposed || _disposed) {
-      return;
-    } else {
-      final layer = this.layer;
-      if (layer != null) {
-        final layerInspectorTree = layer.inspectorTree;
-        final InspectorTreeNode rootNode =
-            layerInspectorTree.setupInspectorTreeNode(
-          layerInspectorTree.createNode(),
-          node,
-          expandChildren: true,
-          expandProperties: false,
-        );
-        this.layer?.inspectorTree!.root = rootNode;
+      if (node == null || group.disposed || _disposed) {
+        return;
+      } else {
+        final layer = this.layer;
+        if (layer != null) {
+          final layerInspectorTree = layer.inspectorTree;
+          final InspectorTreeNode rootNode =
+              layerInspectorTree.setupInspectorTreeNode(
+            layerInspectorTree.createNode(),
+            node,
+            expandChildren: true,
+            expandProperties: false,
+          );
+          this.layer?.inspectorTree!.root = rootNode;
+        }
       }
+    } catch (error) {
+      log(error.toString(), LogLevel.error);
+      treeGroups.cancelNext();
+      return;
     }
   }
 
-  void _getRenderObjectRootAndUpdate() async {
-    final group = treeGroups.next;
-    final node = await group.getRootRenderObject();
+  Future<void> _getRenderObjectRootAndUpdate() async {
+    try {
+      final group = treeGroups.next;
+      final node = await group.getRootRenderObject();
 
-    if (node == null || group.disposed || _disposed) {
-      return;
-    } else {
-      final renderObject = this.renderObject;
-      if (renderObject != null) {
-        final layerInspectorTree = renderObject.inspectorTree;
-        final InspectorTreeNode rootNode =
-            layerInspectorTree.setupInspectorTreeNode(
-          layerInspectorTree.createNode(),
-          node,
-          expandChildren: true,
-          expandProperties: false,
-        );
-        this.renderObject?.inspectorTree!.root = rootNode;
+      if (node == null || group.disposed || _disposed) {
+        return;
+      } else {
+        final renderObject = this.renderObject;
+        if (renderObject != null) {
+          final layerInspectorTree = renderObject.inspectorTree;
+          final InspectorTreeNode rootNode =
+              layerInspectorTree.setupInspectorTreeNode(
+            layerInspectorTree.createNode(),
+            node,
+            expandChildren: true,
+            expandProperties: false,
+          );
+          this.renderObject?.inspectorTree!.root = rootNode;
+        }
       }
+    } catch (error) {
+      log(error.toString(), LogLevel.error);
+      treeGroups.cancelNext();
+      return;
     }
   }
 
