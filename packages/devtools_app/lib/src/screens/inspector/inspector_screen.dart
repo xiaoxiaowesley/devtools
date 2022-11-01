@@ -78,6 +78,9 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
   InspectorTreeController get _layerTreeController =>
       controller.layer!.inspectorTree;
 
+  InspectorTreeController get _renderObjectTreeController =>
+      controller.renderObject!.inspectorTree;
+
   bool searchVisible = false;
 
   /// Indicates whether search can be closed. The value is set to true when
@@ -90,6 +93,7 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
   static const summaryTreeKey = Key('Summary Tree');
   static const detailsTreeKey = Key('Details Tree');
   static const layerTreeKey = Key('Layer Tree');
+  static const renderObjectTreeKey = Key('RenderObject Tree');
   static const minScreenWidthForTextBeforeScaling = 900.0;
   static const unscaledIncludeRefreshTreeWidth = 1255.0;
   static const serviceExtensionButtonsIncludeTextWidth = 1160.0;
@@ -159,12 +163,13 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
   @override
   Widget build(BuildContext context) {
     final summaryTree = _buildSummaryTreeColumn();
+    final screenShot = _buildScreenshot();
 
     final detailsTree = InspectorTree(
       key: detailsTreeKey,
-      inspectorTreeType: InspectorTreeType.widgetDetail,
       treeController: _detailsTreeController,
       summaryTreeController: _summaryTreeController,
+      inspectorTreeType: InspectorTreeType.widgetDetail,
     );
 
     final layerTree = InspectorTree(
@@ -173,17 +178,25 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
       inspectorTreeType: InspectorTreeType.layer,
     );
 
+    final renderObjectTree = InspectorTree(
+      key: renderObjectTreeKey,
+      treeController: _renderObjectTreeController,
+      inspectorTreeType: InspectorTreeType.renderObject,
+    );
+
     final splitAxis = Split.axisFor(context, 0.85);
     final widgetTrees = Split(
       axis: splitAxis,
-      initialFractions: const [0.33, 0.67],
+      initialFractions: const [0.25, 0.5, 0.25],
       children: [
         summaryTree,
         InspectorDetails(
           detailsTree: detailsTree,
+          renderObjectTree: renderObjectTree,
           layerTree: layerTree,
           controller: controller,
         ),
+        screenShot,
       ],
     );
     return Column(
@@ -217,6 +230,13 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
           child: widgetTrees,
         ),
       ],
+    );
+  }
+
+  Widget _buildScreenshot() {
+    return Container(
+      color: Colors.yellow,
+      width: 100,
     );
   }
 
@@ -346,10 +366,11 @@ class InspectorScreenBodyState extends State<InspectorScreenBody>
     });
   }
 
-  void _onStartRecord(){
+  void _onStartRecord() {
     controller.startRecord();
   }
-  void _onStopRecord(){
+
+  void _onStopRecord() {
     controller.stopRecord();
   }
 }
@@ -439,7 +460,9 @@ class InspectorSummaryTreeControls extends StatelessWidget {
                 child: Text('Widget Tree'),
               ),
               PipelineRecordButton(
-                onStartRecord: onStartRecordPressed, onStopRecord: onStopRecordPressed,),
+                onStartRecord: onStartRecordPressed,
+                onStopRecord: onStopRecordPressed,
+              ),
               ...!isSearchVisible
                   ? [
                       const Spacer(),

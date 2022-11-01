@@ -18,11 +18,13 @@ class InspectorDetails extends StatelessWidget {
   const InspectorDetails({
     required this.detailsTree,
     required this.layerTree,
+    required this.renderObjectTree,
     required this.controller,
     Key? key,
   }) : super(key: key);
 
   final Widget detailsTree;
+  final Widget renderObjectTree;
   final Widget layerTree;
   final InspectorController controller;
 
@@ -34,11 +36,13 @@ class InspectorDetails extends StatelessWidget {
         tabName: 'Widget Details Tree',
         trailing: InspectorExpandCollapseButtons(controller: controller),
       ),
+      _buildTab(tabName: 'RenderObject Tree'),
       _buildTab(tabName: 'Layer Tree'),
     ];
     final tabViews = <Widget>[
       LayoutExplorerTab(controller: controller),
       detailsTree,
+      renderObjectTree,
       layerTree,
     ];
 

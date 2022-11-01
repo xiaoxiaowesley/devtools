@@ -45,18 +45,24 @@ class InspectorController extends DisposableController
     required this.inspectorTree,
     required this.inspectorTreeType,
     InspectorTreeController? detailsTree,
+    InspectorTreeController? renderObjectTree,
     InspectorTreeController? layerTree,
     required this.treeType,
     this.parent,
   }) {
     assert(((detailsTree != null) == isSummaryTree) ||
-        (layerTree != null) == isLayerTree);
-    _init(detailsTree: detailsTree, layerTree: layerTree);
+        ((layerTree != null) == isLayerTree) ||
+        ((renderObjectTree != null) == isRenderObjectTree));
+    _init(
+        detailsTree: detailsTree,
+        layerTree: layerTree,
+        renderObjectTree: renderObjectTree);
   }
 
   Future<void> _init({
     InspectorTreeController? detailsTree,
     InspectorTreeController? layerTree,
+    InspectorTreeController? renderObjectTree,
   }) async {
     _refreshRateLimiter = RateLimiter(refreshFramesPerSecond, refresh);
 
@@ -89,6 +95,17 @@ class InspectorController extends DisposableController
       );
     } else {
       layer = null;
+    }
+
+    if (renderObjectTree != null) {
+      renderObject = InspectorController(
+        treeType: FlutterTreeType.renderObject,
+        inspectorTreeType: InspectorTreeType.renderObject,
+        parent: this,
+        inspectorTree: renderObjectTree!,
+      );
+    } else {
+      renderObject = null;
     }
 
     await serviceManager.onServiceAvailable;
@@ -145,6 +162,9 @@ class InspectorController extends DisposableController
   bool get isDetailTree => inspectorTreeType == InspectorTreeType.widgetDetail;
 
   bool get isLayerTree => inspectorTreeType == InspectorTreeType.layer;
+
+  bool get isRenderObjectTree =>
+      inspectorTreeType == InspectorTreeType.renderObject;
 
   void _handleConnectionStart(VmService service) {
     // Clear any existing badge/errors for older errors that were collected.
@@ -203,6 +223,8 @@ class InspectorController extends DisposableController
   InspectorController? parent;
 
   InspectorController? details;
+
+  InspectorController? renderObject;
 
   InspectorController? layer;
 
@@ -976,6 +998,11 @@ class InspectorController extends DisposableController
   }
 
   Future<void> startRecord() async {
+    _getLayerRootAndUpdate();
+    _getRenderObjectRootAndUpdate();
+  }
+
+  void _getLayerRootAndUpdate() async {
     final group = treeGroups.next;
     final node = await group.getRootLayer();
 
@@ -993,6 +1020,28 @@ class InspectorController extends DisposableController
           expandProperties: false,
         );
         this.layer?.inspectorTree!.root = rootNode;
+      }
+    }
+  }
+
+  void _getRenderObjectRootAndUpdate() async {
+    final group = treeGroups.next;
+    final node = await group.getRootRenderObject();
+
+    if (node == null || group.disposed || _disposed) {
+      return;
+    } else {
+      final renderObject = this.renderObject;
+      if (renderObject != null) {
+        final layerInspectorTree = renderObject.inspectorTree;
+        final InspectorTreeNode rootNode =
+            layerInspectorTree.setupInspectorTreeNode(
+          layerInspectorTree.createNode(),
+          node,
+          expandChildren: true,
+          expandProperties: false,
+        );
+        this.renderObject?.inspectorTree!.root = rootNode;
       }
     }
   }

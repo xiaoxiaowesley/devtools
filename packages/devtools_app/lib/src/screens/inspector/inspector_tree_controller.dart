@@ -733,6 +733,9 @@ class InspectorTree extends StatefulWidget {
 
   bool get isLayerTree => inspectorTreeType == InspectorTreeType.layer;
 
+  bool get isRenderObjectTree =>
+      inspectorTreeType == InspectorTreeType.renderObject;
+
   final LinkedHashMap<String, InspectableWidgetError>? widgetErrors;
 
   @override
@@ -1055,8 +1058,7 @@ class _InspectorTreeState extends State<InspectorTree>
           ),
         );
 
-        final bool shouldShowBreadcrumbs =
-            !widget.isSummaryTree && !widget.isLayerTree;
+        final bool shouldShowBreadcrumbs = widget.isDetailTree;
         if (shouldShowBreadcrumbs) {
           final inspectorTreeController = widget.summaryTreeController!;
 

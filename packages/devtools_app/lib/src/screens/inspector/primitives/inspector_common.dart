@@ -12,5 +12,6 @@ enum FlutterTreeType {
 enum InspectorTreeType {
   widgetSummary, // summary widget tree
   widgetDetail, // detail widget tree
+  renderObject, // render object tree
   layer, // layer tree
 }
